@@ -22,7 +22,7 @@ async function body(req){
   let text='';
   for await(const part of req){
     text+=part.toString('utf8');
-    if(Buffer.byteLength(text)>131072) throw new Error('Petición demasiado grande');
+    if(Buffer.byteLength(text)>8388608) throw new Error('Petición demasiado grande');
   }
   return JSON.parse(text||'{}');
 }
@@ -46,11 +46,12 @@ const server=http.createServer(async (req,res)=>{
     if(pathname==='/' && req.method==='GET'){
       return respond(res,200,fs.readFileSync(fileURLToPath(home),'utf8'),'text/html');
     }
+    if(pathname==='/app.js' && req.method==='GET') { const source=fs.readFileSync(fileURLToPath(new URL('../public/app.js',import.meta.url)),'utf8'); return respond(res,200,source,'text/javascript'); }
     if(!pathname.startsWith('/api/')) return respond(res,404,{error:'No encontrado'});
     if(!authorized(req)) return respond(res,401,{error:'Token de acceso incorrecto'});
     if(pathname==='/api/state' && req.method==='GET')return respond(res,200,app.getState());
     if(pathname==='/api/export' && req.method==='GET')
-      return respond(res,200,app.exportJSON(),'application/json');
+      return respond(res,200,app.getState(),'application/json');
     if(req.method==='POST' && routes[pathname]){
       return respond(res,200,routes[pathname](await body(req)));
     }
