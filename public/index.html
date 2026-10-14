@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Montemolín · Open Factory v0.2</title>
+<style>
+:root{color-scheme:dark;font:15px/1.55 system-ui,Arial;background:#09121e;color:#ecf2f6}
+*{box-sizing:border-box}body{margin:0}header{padding:24px max(24px,calc((100vw - 1200px)/2));background:#102134;border-bottom:1px solid #2e4355}
+h1{font-size:1.6rem;margin:0}h2{font-size:1.14rem;margin:0 0 12px}p{margin:6px 0 0;color:#a9b9c7}main{max-width:1200px;margin:auto;padding:24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px}
+.panel{padding:20px;border-radius:10px;border:1px solid #2a4459;background:#122234;min-width:0}
+fieldset{border:0;padding:0;margin:0 0 16px}label{display:block;font-weight:600;font-size:.89rem;margin:8px 0 4px}
+input,select,textarea,button{font:inherit;border-radius:7px;padding:10px;width:100%;max-width:100%;margin:0 0 8px}
+input,select,textarea{background:#081724;border:1px solid #456076;color:#f7f9fc}
+textarea{min-height:75px;resize:vertical}button{border:1px solid #315b74;background:#2b607d;color:#fff;font-weight:600;cursor:pointer}
+button.secondary{background:#26394a}button.danger{background:#774135}
+button:disabled{opacity:.4;cursor:not-allowed}
+.actions{display:flex;gap:10px;flex-wrap:wrap}.actions>*{width:auto;flex:1 1 130px}
+.small{font-size:.86rem;color:#a9b9c7}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#091723;border:1px solid #2a4155;padding:12px;border-radius:8px;max-height:380px;overflow:auto}
+ul{padding-left:20px}li{padding:5px 0}
+.pass{color:#86d5a5}.fail{color:#ff9c99}
+#notification{margin:0 0 18px;padding:12px;background:#192d42;border-radius:8px;display:none;white-space:pre-wrap}
+#notification.error{background:#49252b}
+footer{padding:28px;text-align:center;color:#91a7ba}
+</style>
+</head>
+<body>
+<header><h1>MONTEMOLÍN · OPEN FACTORY</h1>
+<p>v0.2 — Gestor auditable de proyectos y evidencias · Edición local o autoalojada</p>
+</header>
+<main>
+<div id="notification" role="status"></div>
+<div class="panel" style="margin-bottom:16px">
+<h2>Acceso y portabilidad</h2>
+<div class="grid">
+<div><label for="token">Token del servidor (si se ha configurado)</label><input id="token" type="password" autocomplete="off" placeholder="FACTORY_TOKEN"><div class="actions"><button id="connect">Conectar</button><button id="export" class="secondary">Exportar JSON</button></div></div>
+<div><label for="import">Importar copia JSON (exige verificar de nuevo)</label><input type="file" id="import" accept="application/json,.json"><p class="small">La importación nunca considera aprobadas las verificaciones anteriores.</p></div>
+</div>
+</div>
+<div class="grid">
+<section class="panel"><h2>1. Proyectos</h2>
+<form id="createProject"><label>Nuevo proyecto</label><input name="name" required placeholder="Nombre del proyecto"><button>Crear proyecto</button></form>
+<label for="project">Proyecto seleccionado</label><select id="project"></select><p class="small" id="projectInfo"></p></section>
+<section class="panel"><h2>2. Requisitos</h2>
+<form id="createRequirement"><label>Nuevo requisito</label><input name="title" required placeholder="Criterio comprobable"><button>Añadir requisito</button></form>
+<label for="requirement">Requisito para nueva tarea</label><select id="requirement"></select><ul id="requirements"></ul></section>
+<section class="panel"><h2>3. Tareas</h2>
+<form id="createTask"><label>Nueva tarea</label><input name="title" required placeholder="Trabajo a realizar"><button>Añadir tarea</button></form>
+<label for="task">Tarea seleccionada</label><select id="task"></select><button id="done" class="secondary">Marcar tarea terminada</button><ul id="tasks"></ul></section>
+<section class="panel"><h2>4. Artefactos y evidencias</h2>
+<form id="attachArtifact"><label>Procedencia verificable</label><input name="source" required placeholder="Repositorio, commit, fuente"><label>Contenido de artefacto de texto (máx. 64 KiB)</label><textarea name="content" required placeholder="Fragmento de código o resultado verificable"></textarea><button>Guardar evidencia con SHA-256</button></form><ul id="artifacts"></ul></section>
+<section class="panel"><h2>5. Verificación independiente</h2><p class="small">Un verificador determinista, separado del modelo de IA, ejecuta siete controles. Ninguna declaración de la IA sustituye estas comprobaciones.</p><button id="evaluate">Ejecutar los 7 controles</button><div id="verification"></div></section>
+<section class="panel"><h2>6. Aprobación y entrega</h2><label for="reviewer">Identificación del revisor humano</label><input id="reviewer" placeholder="Nombre del responsable"><button id="approve" class="secondary">Aprobar versión verificada</button><button id="deliver" class="danger">Solicitar entrega</button><p class="small" id="gate">La entrega solo se autoriza con PASS y aprobación de la misma versión.</p></section>
+</div>
+<section class="panel" style="margin-top:16px"><h2>Historial auditable</h2><pre id="events">Sin eventos.</pre></section>
+</main>
+<footer>MIT · Sin proveedores IA conectados · Sin acreditación de conformidad regulatoria</footer>
+<script type="module" src="/app.js"></script>
+</body>
+</html>

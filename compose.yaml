@@ -1,0 +1,18 @@
+services:
+  factory:
+    build: .
+    ports:
+      - "127.0.0.1:5679:5679"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5679
+      FACTORY_DATA: /app/data/factory.json
+      FACTORY_TOKEN: ${FACTORY_TOKEN:?Define FACTORY_TOKEN en tu entorno}
+    volumes:
+      - factory-data:/app/data
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+volumes:
+  factory-data:
