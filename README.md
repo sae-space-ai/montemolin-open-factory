@@ -45,7 +45,7 @@ La aprobación se asocia al SHA-256 de la versión exacta. Cambiar requisitos, t
 npm test
 ```
 
-Las siete pruebas de aceptación utilizan `node:test`, se ejecutan sin un LLM y se repiten en GitHub Actions sobre el código del commit.
+Las siete pruebas de aceptación y una prueba HTTP de integración utilizan `node:test`, se ejecutan sin un LLM y se repiten en GitHub Actions sobre el código del commit.
 
 ## Límites y próximos módulos
 
