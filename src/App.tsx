@@ -13,7 +13,7 @@ import {
   gateMessage,
 } from './core/projects';
 import { loadData, saveData, exportData, importDataFromFile } from './core/storage';
-import { formatDate } from './core/utils';
+import { formatDate, generateId } from './core/utils';
 
 // ─── Subcomponentes ────────────────────────────────────────────────
 
@@ -267,7 +267,7 @@ function ProjectDetail({
 
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) return;
-    const task = { id: crypto.randomUUID?.() || Math.random().toString(36).slice(2), title: newTaskTitle.trim(), completed: false };
+    const task = { id: generateId(), title: newTaskTitle.trim(), completed: false };
     onUpdate({ ...project, tasks: [...project.tasks, task] });
     setNewTaskTitle('');
   };
@@ -286,7 +286,7 @@ function ProjectDetail({
   const handleAddEvidence = () => {
     if (!newEvidenceDesc.trim()) return;
     const ev = {
-      id: crypto.randomUUID?.() || Math.random().toString(36).slice(2),
+      id: generateId(),
       description: newEvidenceDesc.trim(),
       date: new Date().toISOString(),
       verified: false,
@@ -332,7 +332,7 @@ function ProjectDetail({
 
   const handleAddTest = (name: string, mandatory: boolean) => {
     const test: ProjectTest = {
-      id: crypto.randomUUID?.() || Math.random().toString(36).slice(2),
+      id: generateId(),
       name,
       mandatory,
       status: 'pending',

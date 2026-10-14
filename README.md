@@ -65,13 +65,36 @@ Prueba obligatoria falla
 ## Ejecutar pruebas
 
 ```bash
+# Ejecutar todos los tests una vez
 npx vitest run
+
+# Modo watch (se ejecutan automáticamente al cambiar código)
+npx vitest
+
+# Ejecutar solo tests del quality gate
+npx vitest run src/__tests__/quality-gate.test.ts
+
+# Ejecutar solo tests de proyectos
+npx vitest run src/__tests__/projects.test.ts
 ```
 
-### Cobertura
+### Cobertura de tests
 
-- **quality-gate.test.ts**: 14 casos que verifican la regla irrenunciable.
-- **projects.test.ts**: 16 casos que verifican la lógica de negocio.
+- **quality-gate.test.ts**: 14 casos que verifican la regla irrenunciable
+  - Evaluación del gate con diferentes estados de pruebas
+  - Bloqueo de evidencias cuando el gate falla
+  - Verificación de entregas según estado del gate
+  - Completado de proyectos según estado del gate
+  - Mensajes del gate
+
+- **projects.test.ts**: 16 casos que verifican la lógica de negocio
+  - Creación de datos iniciales
+  - Creación de proyectos
+  - Gestión de tareas (añadir, toggle, eliminar)
+  - Gestión de evidencias con quality gate
+  - Gestión de pruebas
+  - Cambio de estado de proyectos
+  - Cálculo de estadísticas
 
 ---
 

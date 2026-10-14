@@ -4,6 +4,11 @@
 
 /** Genera un identificador alfanumérico corto. */
 export function generateId(): string {
+  // Usar crypto.randomUUID si está disponible, sino fallback
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback: combinación de timestamp y random
   return Math.random().toString(36).substring(2, 11) +
     Date.now().toString(36).slice(-4);
 }
