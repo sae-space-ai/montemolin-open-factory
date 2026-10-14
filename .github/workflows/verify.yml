@@ -1,0 +1,20 @@
+name: Pruebas independientes
+on:
+  push:
+    branches: [main, fase-1-nucleo-auditable]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    steps:
+      - name: Recuperar commit exacto
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Ejecutar siete pruebas de aceptación
+        run: npm test
