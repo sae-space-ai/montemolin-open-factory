@@ -1,0 +1,10 @@
+{
+  "name": "montemolin-open-factory",
+  "version": "0.2.0",
+  "private": false,
+  "type": "module",
+  "description": "Núcleo verificable y portable del gestor de proyectos y evidencias.",
+  "engines": {"node": ">=20"},
+  "scripts": {"start": "node src/server.mjs", "test": "node --test test/*.test.mjs", "verify": "node --test test/*.test.mjs"},
+  "license": "MIT"
+}
