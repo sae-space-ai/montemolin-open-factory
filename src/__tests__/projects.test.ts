@@ -1,9 +1,8 @@
 /**
- * Tests — Lógica de proyectos
+ * Tests — Lógica de proyectos (Fase 3)
  *
- * Verifica que las operaciones de negocio (crear, actualizar,
- * añadir tareas, verificar evidencias) funcionan correctamente
- * y respetan el quality gate.
+ * Verifica que las operaciones de negocio funcionan correctamente
+ * y respetan el quality gate y el activity log.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -16,9 +15,11 @@ import {
   addEvidence,
   verifyEvidence,
   deleteEvidence,
+  linkEvidenceToTask,
   addTest,
   setTestStatus,
   setProjectStatus,
+  incrementRevision,
   getStats,
 } from '../core/projects';
 
@@ -33,6 +34,17 @@ describe('createInitialData', () => {
   it('el proyecto inicial debe tener pruebas', () => {
     const data = createInitialData();
     expect(data.projects[0].tests.length).toBeGreaterThan(0);
+  });
+
+  it('debe tener activity log con al menos una entrada', () => {
+    const data = createInitialData();
+    expect(data.activityLog).toBeDefined();
+    expect(data.activityLog.entries.length).toBeGreaterThan(0);
+  });
+
+  it('la primera entrada del log debe ser project.created', () => {
+    const data = createInitialData();
+    expect(data.activityLog.entries[0].action).toBe('project.created');
   });
 });
 
@@ -54,11 +66,12 @@ describe('createProject', () => {
     expect(last.title).toBe('Nuevo');
   });
 
-  it('debe usar descripción por defecto si está vacía', () => {
+  it('debe registrar la acción en el activity log', () => {
     const data = createInitialData();
-    const updated = createProject(data, 'Nuevo', '');
-    const last = updated.projects[updated.projects.length - 1];
-    expect(last.description).toBe('Sin descripción.');
+    const initialLogCount = data.activityLog.entries.length;
+    const updated = createProject(data, 'Nuevo', 'Desc');
+    expect(updated.activityLog.entries.length).toBe(initialLogCount + 1);
+    expect(updated.activityLog.entries[0].action).toBe('project.created');
   });
 });
 
@@ -94,18 +107,50 @@ describe('tareas', () => {
     updated = deleteTask(updated, pid, tid);
     expect(updated.projects[0].tasks).toHaveLength(0);
   });
+
+  it('addTask debe registrar la acción en el log', () => {
+    const data = createInitialData();
+    const pid = data.projects[0].id;
+    const initialCount = data.activityLog.entries.length;
+    const updated = addTask(data, pid, 'Tarea nueva');
+    expect(updated.activityLog.entries.length).toBe(initialCount + 1);
+    expect(updated.activityLog.entries[0].action).toBe('task.added');
+  });
 });
 
 // ─── Evidencias y Quality Gate ─────────────────────────────────────
 
 describe('evidencias + quality gate', () => {
-  it('addEvidence debe añadir una evidencia', () => {
+  it('addEvidence debe añadir una evidencia con linkedTaskId null', () => {
     const data = createInitialData();
     const pid = data.projects[0].id;
     const updated = addEvidence(data, pid, 'Screenshot');
     const project = updated.projects.find((p) => p.id === pid)!;
     expect(project.evidence).toHaveLength(1);
     expect(project.evidence[0].verified).toBe(false);
+    expect(project.evidence[0].linkedTaskId).toBeNull();
+  });
+
+  it('addEvidence con linkedTaskId debe vincular a la tarea', () => {
+    const data = createInitialData();
+    const pid = data.projects[0].id;
+    let updated = addTask(data, pid, 'Tarea 1');
+    const tid = updated.projects[0].tasks[0].id;
+    updated = addEvidence(updated, pid, 'Screenshot', tid);
+    const project = updated.projects.find((p) => p.id === pid)!;
+    expect(project.evidence[0].linkedTaskId).toBe(tid);
+  });
+
+  it('linkEvidenceToTask debe vincular evidencia a tarea', () => {
+    const data = createInitialData();
+    const pid = data.projects[0].id;
+    let updated = addTask(data, pid, 'Tarea 1');
+    const tid = updated.projects[0].tasks[0].id;
+    updated = addEvidence(updated, pid, 'Screenshot');
+    const eid = updated.projects[0].evidence[0].id;
+    updated = linkEvidenceToTask(updated, pid, eid, tid);
+    const project = updated.projects.find((p) => p.id === pid)!;
+    expect(project.evidence[0].linkedTaskId).toBe(tid);
   });
 
   it('verifyEvidence debe verificar cuando el gate pasa', () => {
@@ -122,16 +167,12 @@ describe('evidencias + quality gate', () => {
   it('verifyEvidence debe BLOQUEAR cuando una prueba obligatoria falla', () => {
     const data = createInitialData();
     const pid = data.projects[0].id;
-    // Hacer fallar una prueba obligatoria
     const testId = data.projects[0].tests.find((t) => t.mandatory)!.id;
     let updated = setTestStatus(data, pid, testId, 'fail');
-    // Añadir evidencia
     updated = addEvidence(updated, pid, 'Screenshot');
     const eid = updated.projects[0].evidence[0].id;
-    // Intentar verificar
     const result = verifyEvidence(updated, pid, eid);
     expect(result.blocked).toBe(true);
-    // La evidencia NO debe estar verificada
     const project = result.data.projects.find((p) => p.id === pid)!;
     expect(project.evidence[0].verified).toBe(false);
     expect(project.evidence[0].blocked).toBe(true);
@@ -161,6 +202,15 @@ describe('pruebas (tests)', () => {
     expect(test.status).toBe('fail');
     expect(test.lastRun).not.toBeNull();
   });
+
+  it('setTestStatus a fail debe registrar gate.blocked en el log', () => {
+    const data = createInitialData();
+    const pid = data.projects[0].id;
+    const tid = data.projects[0].tests.find((t) => t.mandatory)!.id;
+    const updated = setTestStatus(data, pid, tid, 'fail');
+    const gateBlocked = updated.activityLog.entries.find((e) => e.action === 'gate.blocked');
+    expect(gateBlocked).toBeDefined();
+  });
 });
 
 // ─── Completar proyecto ────────────────────────────────────────────
@@ -180,11 +230,18 @@ describe('setProjectStatus', () => {
   it('debe completar si el gate pasa', () => {
     const data = createInitialData();
     const pid = data.projects[0].id;
-    // Todas las obligatorias en pass
     const result = setProjectStatus(data, pid, 'completed');
     expect(result.blocked).toBe(false);
     const project = result.data.projects.find((p) => p.id === pid)!;
     expect(project.status).toBe('completed');
+  });
+
+  it('incrementRevision debe incrementar la revisión', () => {
+    const data = createInitialData();
+    const pid = data.projects[0].id;
+    const updated = incrementRevision(data, pid);
+    const project = updated.projects.find((p) => p.id === pid)!;
+    expect(project.revision).toBe(2);
   });
 });
 

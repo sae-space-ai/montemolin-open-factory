@@ -19,6 +19,18 @@ export function loadData(): AppData | null {
       console.warn('[storage] Datos corruptos, se ignoran.');
       return null;
     }
+    // Migración Fase 3: asegurar activityLog
+    if (!parsed.activityLog) {
+      parsed.activityLog = { entries: [] };
+    }
+    // Migración Fase 3: asegurar linkedTaskId en evidencias
+    parsed.projects = parsed.projects.map((p) => ({
+      ...p,
+      evidence: (p.evidence || []).map((e) => ({
+        ...e,
+        linkedTaskId: e.linkedTaskId ?? null,
+      })),
+    }));
     return parsed;
   } catch (e) {
     console.error('[storage] Error al cargar datos:', e);
